@@ -17,12 +17,18 @@ return new class extends Migration
             $table->string('last_name');
             $table->string('email')->unique();
             $table->string('phone')->unique()->nullable();
+            $table->unsignedBigInteger('status_id')->nullable();
             $table->text('otp')->nullable();
             $table->dateTime('otp_expires_at')->nullable();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
+
+            $table->foreign('status_id')
+            ->references('id')
+            ->on('statuses')
+            ->onDelete('set null');
         });
     }
 
