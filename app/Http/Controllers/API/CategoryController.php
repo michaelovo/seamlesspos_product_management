@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Traits\Helpers;
 use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class CategoryController extends Controller
@@ -18,8 +19,16 @@ class CategoryController extends Controller
     {
         try {
 
-            /*Fetch all categories */
-            $categories = Category::orderBy('name', 'asc')->with('status:id,name')->get();
+            /** check for existence of cache 'categories' data */
+            if (Cache::has('categories')) {
+                $categories = Cache::get('categories');
+
+                return $this->sendSuccessResponse(CategoryResource::collection($categories), 'Categories retrieved successfully!', 200);
+            }
+
+            $categories = Cache::remember('categories', 60, function () {
+                return Category::latest()->with('status:id,name')->get();
+            });
 
             /* Prepare the response */
             return $this->sendSuccessResponse(CategoryResource::collection($categories), 'Categories retrieved successfully!', 200);
@@ -33,7 +42,7 @@ class CategoryController extends Controller
     {
         try {
 
-            /* Confirm The category Exists using either the category id */
+            /* Confirm The category Exists using the category id */
             $category = Category::where('id', $categoryId)->with('status:id,name')->first();
 
             if (is_null($category)) {

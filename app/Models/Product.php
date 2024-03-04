@@ -18,14 +18,19 @@ class Product extends Model
         'quantity' => 'integer',
     ];
 
+    protected $with = [
+        'createdBy:id,last_name,first_name',
+        'productCategory',
+    ];
+
     public function status(): BelongsTo
     {
         return $this->belongsTo(Status::class);
     }
 
-    public function createBy(): BelongsTo
+    public function createdBy(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
     public function productCategory(): HasMany

@@ -7,17 +7,31 @@ use App\Http\Resources\StatusResource;
 use App\Models\Status;
 use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class StatusController extends Controller
 {
 
-    public function fetchStatuses(): JsonResponse
+    public function fetchStatuses()
     {
         try {
 
-            /*Fetch all statuses */
-            $statuses = Status::orderBy('name', 'asc')->get();
+            /** check for existence of cache 'statuses' data */
+            if (Cache::has('statuses')) {
+                $statuses = Cache::get('statuses');
+
+                /* Prepare the response */
+                $data = new \stdClass();
+                $data->statuses = StatusResource::collection($statuses);
+
+                return $this->sendSuccessResponse($data, 'Statuses retrieved successfully!', 200);
+            }
+
+            /*Fetch all statuses and cache for a minute */
+            $statuses = Cache::remember('statuses', 60, function () {
+                return Status::orderBy('name', 'asc')->get();
+            });
 
             /* Prepare the response */
             $data = new \stdClass();
@@ -34,7 +48,7 @@ class StatusController extends Controller
     {
         try {
 
-            /* Confirm The status Exists using either the status */
+            /* Confirm The status Exists using status id */
             $status = Status::where('id', $statusId)->first();
 
             if (is_null($status)) {

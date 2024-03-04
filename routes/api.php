@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\CategoryController;
+use App\Http\Controllers\API\ProductController;
 use App\Http\Controllers\API\StatusController;
 use Illuminate\Support\Facades\Route;
 
@@ -35,5 +36,14 @@ Route::group(['prefix' => '/v1'], function () {
     Route::group(['prefix' => 'category'], function () {
         Route::get('', [CategoryController::class, 'fetchCategories']);
         Route::get('/{categoryId}', [CategoryController::class, 'fetchCategoryById']);
+    });
+
+    /** Product */
+    Route::group(['prefix' => 'product', 'middleware' => (['auth:sanctum'])], function () {
+        Route::get('', [ProductController::class, 'fetchAllProducts']);
+        Route::post('/create', [ProductController::class, 'createProduct']);
+        Route::get('/{productId}/fetch', [ProductController::class, 'fetchProductById']);
+        Route::patch('/{productId}/update', [ProductController::class, 'updateProduct']);
+        Route::delete('/{productId}/delete', [ProductController::class, 'deleteProduct']);
     });
 });
