@@ -2,17 +2,20 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Events\ProductCategoryEvent;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductStoreRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
-use App\Models\ProductCategory;
 use App\Traits\Helpers;
 use Exception;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
@@ -20,7 +23,6 @@ class ProductController extends Controller
 
     public function createProduct(ProductStoreRequest $request): JsonResponse
     {
-
         try {
 
             $product = Product::create([
@@ -32,16 +34,11 @@ class ProductController extends Controller
                 'status_id' => ProductController::getStatusId('Active'),
             ]);
 
-            foreach ($request->category as $category) {
-                /* Create product categories */
-                $product_categories = ProductCategory::create([
-                    'product_id' => $product->id,
-                    'category_id' => $category,
-                ]);
-            }
+            /* product category event */
+            ProductCategoryEvent::dispatch($product, $request);
 
             /* Send response */
-            return $this->sendSuccessResponse(new ProductResource($product), 'Product Added Successfully', 200);
+            return $this->sendSuccessResponse(new ProductResource($product->load('productCategory')), 'Product Added Successfully', 200);
         } catch (Exception $e) {
             Log::error($e->getMessage(), [$e->getTrace()]);
             return $this->sendServerError('Sorry, Something went wrong. Please, try again.');
@@ -141,5 +138,49 @@ class ProductController extends Controller
             return $this->sendServerError('Sorry, Something went wrong. Please, try again.');
         }
 
+    }
+
+    public function updateProduct(Request $request, int $productId): JsonResponse
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'name' => ['required', 'max:60', Rule::unique('products')->ignore($productId)],
+                'description' => 'required|string|min:3|max:500',
+                'price' => 'numeric|required',
+                'quantity' => 'integer|required|min:1|digits_between: 1,9',
+                'category' => 'required|array',
+                'category.*' => 'required|integer|distinct|exists:categories,id',
+            ]);
+
+            /* Check The Validator For Errors */
+            if ($validator->fails()) {
+                return $this->sendErrorResponse($validator->errors(), 'There are some errors in your request!', 400);
+            }
+
+            /* Confirm The product Exists and owned by the authenticated user */
+            $product = Product::where('id', $productId)
+                ->where('user_id', Auth::id())
+                ->first();
+
+            if (!($product)) {
+                $errors = new \stdClass();
+                $errors->product = ['Sorry, This product could not be retrieved!'];
+
+                return $this->sendErrorResponse($errors, 'Invalid product Id!', 400);
+            }
+
+            /* Update product details */
+            $product->update([
+                'name' => $request->name,
+                'description' => $request->description,
+                'price' => $request->price,
+                'quantity' => $request->quantity,
+            ]);
+
+            return $this->sendSuccessResponse(new ProductResource($product), 'Product Updated successfully!', 201);
+        } catch (Exception $e) {
+            Log::error($e->getMessage(), [$e->getTrace()]);
+            return $this->sendServerError('Sorry, Something went wrong. Please, try again.');
+        }
     }
 }
