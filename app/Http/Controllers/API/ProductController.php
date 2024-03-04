@@ -148,8 +148,6 @@ class ProductController extends Controller
                 'description' => 'required|string|min:3|max:500',
                 'price' => 'numeric|required',
                 'quantity' => 'integer|required|min:1|digits_between: 1,9',
-                'category' => 'required|array',
-                'category.*' => 'required|integer|distinct|exists:categories,id',
             ]);
 
             /* Check The Validator For Errors */

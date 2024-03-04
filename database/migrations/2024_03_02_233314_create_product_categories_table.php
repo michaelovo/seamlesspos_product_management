@@ -26,6 +26,7 @@ return new class extends Migration
                 ->references('id')
                 ->on('categories')
                 ->onDelete('set null');
+            $table->unique(['product_id', 'category_id'], 'productCategory_keys_unique');
         });
     }
 
