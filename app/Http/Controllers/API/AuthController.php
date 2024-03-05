@@ -83,7 +83,7 @@ class AuthController extends Controller
             ]);
 
             /**
-             * Just incase you do not want to test without SMTP credentials
+             * Just incase you do want to test without SMTP credentials
              * Uncomment line 91 and comment line 94
              * the OTP will be log in the "laravel.log" file
              **/

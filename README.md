@@ -1,66 +1,91 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+### Key Application Endpoints
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+* API collection documentation:https://documenter.getpostman.com/view/6464771/2sA2xe4ZHq
+* API baseUrl: http://localhost:8000/api/v1/
 
-## About Laravel
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+# Project setup guidelines
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+1. Clone the project from the repo, and run the following commands to setup the project environment locally:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+* composer install
+* cp .env.example .env or copy .env.example .env
+* php artisan key:generate
+* php artisan migrate
+* php artisan db:seed
+* php artisan serve
+* php artisan queue:work
+  
+2. Configure the ".env" to reflect your database credentials as shown below:
 
-## Learning Laravel
+* DB_CONNECTION=mysql
+* DB_HOST=127.0.0.1
+* DB_PORT=3306
+* DB_DATABASE=YOUR_DATABASE_NAME
+* DB_USERNAME=YOUR_DATABASE_USERNAME
+* DB_PASSWORD=YOUR_DATABASE_PASSWORD
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+3. To use Redis cache and queue, configure the ".env" file as shown below:
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+* CACHE_DRIVER=redis
+* QUEUE_CONNECTION=redis
+* SESSION_DRIVER=redis
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+* REDIS_HOST=127.0.0.1
+* REDIS_PASSWORD=null
+* REDIS_PORT=6379
+* REDIS_CLIENT=predis
 
-## Laravel Sponsors
+4. Optionally, to receive account verification OTP via email you can configure the ".env" file with your SMTP credentials as shown below:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+* MAIL_MAILER=smtp
+* MAIL_HOST=smtp.mailtrap.io
+* MAIL_PORT=2525
+* MAIL_USERNAME=username
+* MAIL_PASSWORD=password
+* MAIL_ENCRYPTION=tls
+* MAIL_FROM_ADDRESS="hello@example.com"
+* MAIL_FROM_NAME="${APP_NAME}"
 
-### Premium Partners
+### NB: You can also skip step(4) above, but you will have to check the "/storage/logs/laravel.log" file for your account verification OTP which is only valid for ten(10) minutes.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
 
-## Contributing
+4. Test cases could be executed as a whole or as individual function of each case. As shown below each individual test case function can be tested:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### RegistrationTest: Run the following command:
+- php artisan test --filter RegistrationTest::test_signup_with_valid_payload
+- php artisan test --filter RegistrationTest::test_signup_with_unmatched_password_and_confirmPassword
 
-## Code of Conduct
+### LoginTest: Run the following command:
+- php artisan test --filter LoginTest::test_verified_user_account_login_with_the_valid_email_and_password
+- php artisan test --filter LoginTest::test_unverified_user_account_login_with_invalid_password
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### ProductTest: Run the following command:
+- php artisan test --filter ProductTest::test_verified_user_fetch_product_list
+- php artisan test --filter ProductTest::test_verified_user_fetch_product_by_id
+- php artisan test --filter ProductTest::test_unverified_user_fetch_product_list
 
-## Security Vulnerabilities
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# Application workflow summary
+1. Signup
+2. Account verification OTP will be sent to your email account. You can also check the "/storage/logs/laravel.log" file for the OTP if you wishes not to use SMTP.
+3. Enter the sent OTP to verify your account, as only verified account will be allowed to login.
+4. You can RESEND the OTP if the time(10 minutes) elapse and you are yet to verify your account.
+5. Login.
+6  Create product.
+7. Retrieve all created products.
+8. Fetch a single product.
+9. Update a selected product.
+10. Update product category.
+11. Delete selected product.
+12. Fetch list of statuses.
+13. Fetch list of available categories.
 
-## License
+NB: 
+1. Kindly note that you can only update/delete a product created by you.
+2. You need to supply your access token to for all product related route
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### Key Application Endpoints
+
+* API collection documentation:nhttps://documenter.getpostman.com/view/6464771/2sA2xe4ZHq
+* API baseUrl: http://localhost:8000/api/v1/
